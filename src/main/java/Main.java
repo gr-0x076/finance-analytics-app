@@ -1,7 +1,8 @@
-import java.util.Scanner;
-import java.io.File;
+import java.util.*;
+import java.io.*;
 
 public class Main {
+
     public static void main(String[] args) throws Exception {
         Scanner scanner = new Scanner(System.in);
 
@@ -20,9 +21,9 @@ public class Main {
             else if (input.startsWith("type ")) {
                 String command = input.substring(5);
 
-                if (command.equals("echo") ||
-                    command.equals("exit") ||
-                    command.equals("type")) {
+                if (command.equals("echo")
+                        || command.equals("exit")
+                        || command.equals("type")) {
 
                     System.out.println(command + " is a shell builtin");
                 } else {
@@ -37,7 +38,28 @@ public class Main {
             }
 
             else {
-                System.out.println(input + ": command not found");
+                String[] parts = input.split(" ");
+                String command = parts[0];
+
+                String executablePath = findExecutable(command);
+
+                if (executablePath != null) {
+                    List<String> commandWithArgs = new ArrayList<>();
+
+                    commandWithArgs.add(executablePath);
+
+                    for (int i = 1; i < parts.length; i++) {
+                        commandWithArgs.add(parts[i]);
+                    }
+
+                    ProcessBuilder pb = new ProcessBuilder(commandWithArgs);
+                    pb.inheritIO();
+
+                    Process process = pb.start();
+                    process.waitFor();
+                } else {
+                    System.out.println(command + ": command not found");
+                }
             }
         }
     }
