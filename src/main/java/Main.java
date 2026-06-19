@@ -96,15 +96,29 @@ public class Main {
 
                 if (executablePath != null) {
 
-                    List<String> processArgs = new ArrayList<>();
+                    String redirectFile = null;
 
+                    List<String> processArgs = new ArrayList<>();
                     processArgs.add(executablePath);
 
                     for (int i = 1; i < tokens.size(); i++) {
-                        processArgs.add(tokens.get(i));
+                        if (tokens.get(i).equals(">")
+                                || tokens.get(i).equals("1>")) {
+
+                            if (i + 1 < tokens.size()) {
+                                redirectFile = tokens.get(i + 1);
+                                i++;
+                            }
+                        } else {
+                            processArgs.add(tokens.get(i));
+                        }
                     }
 
                     ProcessBuilder pb = new ProcessBuilder(processArgs);
+
+                    if (redirectFile != null) {
+                        pb.redirectOutput(new File(currentDirectory, redirectFile));
+                    }
 
                     pb.directory(currentDirectory);
                     pb.inheritIO();
