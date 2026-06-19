@@ -1,3 +1,4 @@
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,9 +27,7 @@ public class Main {
 
             if (command.equals("exit")) {
                 break;
-            }
-
-            else if (command.equals("echo")) {
+            } else if (command.equals("echo")) {
 
                 StringBuilder sb = new StringBuilder();
 
@@ -40,13 +39,9 @@ public class Main {
                 }
 
                 System.out.println(sb);
-            }
-
-            else if (command.equals("pwd")) {
+            } else if (command.equals("pwd")) {
                 System.out.println(currentDirectory.getCanonicalPath());
-            }
-
-            else if (command.equals("cd")) {
+            } else if (command.equals("cd")) {
 
                 if (tokens.size() < 2) {
                     continue;
@@ -58,11 +53,9 @@ public class Main {
 
                 if (path.equals("~")) {
                     newDirectory = new File(System.getenv("HOME"));
-                }
-                else if (path.startsWith("/")) {
+                } else if (path.startsWith("/")) {
                     newDirectory = new File(path);
-                }
-                else {
+                } else {
                     newDirectory = new File(currentDirectory, path);
                 }
 
@@ -71,9 +64,7 @@ public class Main {
                 } else {
                     System.out.println("cd: " + path + ": No such file or directory");
                 }
-            }
-
-            else if (command.equals("type")) {
+            } else if (command.equals("type")) {
 
                 if (tokens.size() < 2) {
                     continue;
@@ -99,9 +90,7 @@ public class Main {
                         System.out.println(target + ": not found");
                     }
                 }
-            }
-
-            else {
+            } else {
 
                 String executablePath = findExecutable(command);
 
@@ -124,57 +113,76 @@ public class Main {
 
     private static List<String> parseCommand(String input) {
 
-    List<String> tokens = new ArrayList<>();
-    StringBuilder current = new StringBuilder();
+        List<String> tokens = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
 
-    boolean inSingleQuote = false;
-    boolean inDoubleQuote = false;
+        boolean inSingleQuote = false;
+        boolean inDoubleQuote = false;
 
-    for (int i = 0; i < input.length(); i++) {
+        for (int i = 0; i < input.length(); i++) {
 
-        char ch = input.charAt(i);
+            char ch = input.charAt(i);
 
-        if (ch == '\'' && !inDoubleQuote) {
-            inSingleQuote = !inSingleQuote;
-            continue;
-        }
-
-        if (ch == '"' && !inSingleQuote) {
-            inDoubleQuote = !inDoubleQuote;
-            continue;
-        }
-
-        // Backslashes only escape outside quotes
-        if (ch == '\\' && !inSingleQuote && !inDoubleQuote) {
-
-            if (i + 1 < input.length()) {
-                current.append(input.charAt(i + 1));
-                i++;
+            if (ch == '\'' && !inDoubleQuote) {
+                inSingleQuote = !inSingleQuote;
+                continue;
             }
 
-            continue;
-        }
+            if (ch == '"' && !inSingleQuote) {
+                inDoubleQuote = !inDoubleQuote;
+                continue;
+            }
 
-        if (Character.isWhitespace(ch)
-                && !inSingleQuote
-                && !inDoubleQuote) {
+            // Inside double quotes
+            if (inDoubleQuote && ch == '\\') {
 
-            if (current.length() > 0) {
-                tokens.add(current.toString());
-                current.setLength(0);
+                if (i + 1 < input.length()) {
+
+                    char next = input.charAt(i + 1);
+
+                    if (next == '"' || next == '\\') {
+                        current.append(next);
+                        i++;
+                        continue;
+                    } else {
+                        current.append('\\');
+                        current.append(next);
+                        i++;
+                        continue;
+                    }
+                }
+            }
+
+            // Outside quotes
+            if (!inSingleQuote && !inDoubleQuote && ch == '\\') {
+
+                if (i + 1 < input.length()) {
+                    current.append(input.charAt(i + 1));
+                    i++;
+                }
+
+                continue;
+            }
+
+            if (Character.isWhitespace(ch)
+                    && !inSingleQuote
+                    && !inDoubleQuote) {
+
+                if (current.length() > 0) {
+                    tokens.add(current.toString());
+                    current.setLength(0);
+                }
+            } else {
+                current.append(ch);
             }
         }
-        else {
-            current.append(ch);
+
+        if (current.length() > 0) {
+            tokens.add(current.toString());
         }
-    }
 
-    if (current.length() > 0) {
-        tokens.add(current.toString());
+        return tokens;
     }
-
-    return tokens;
-}
 
     private static String findExecutable(String command) {
 
