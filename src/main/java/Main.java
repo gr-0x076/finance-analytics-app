@@ -33,9 +33,13 @@ public class Main {
 
                 File newDirectory;
 
-                if (path.startsWith("/")) {
+                if (path.equals("~")) {
+                    newDirectory = new File(System.getenv("HOME"));
+                }
+                else if (path.startsWith("/")) {
                     newDirectory = new File(path);
-                } else {
+                }
+                else {
                     newDirectory = new File(currentDirectory, path);
                 }
 
