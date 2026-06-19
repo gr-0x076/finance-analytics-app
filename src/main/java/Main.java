@@ -32,6 +32,7 @@ public class Main {
                 String stdoutRedirectFile = null;
                 String stderrRedirectFile = null;
                 boolean stdoutAppend = false;
+                boolean stderrAppend = false;
 
                 StringBuilder sb = new StringBuilder();
                 boolean first = true;
@@ -43,11 +44,13 @@ public class Main {
                             || token.equals("1>")
                             || token.equals(">>")
                             || token.equals("1>>")
-                            || token.equals("2>")) {
+                            || token.equals("2>")
+                            || token.equals("2>>")) {
 
                         if (i + 1 < tokens.size()) {
-                            if (token.equals("2>")) {
+                            if (token.equals("2>") || token.equals("2>>")) {
                                 stderrRedirectFile = tokens.get(i + 1);
+                                stderrAppend = token.equals("2>>");
                             } else {
                                 stdoutRedirectFile = tokens.get(i + 1);
                                 stdoutAppend = token.equals(">>") || token.equals("1>>");
@@ -96,7 +99,9 @@ public class Main {
                         errorFile = new File(currentDirectory, stderrRedirectFile);
                     }
 
-                    new java.io.PrintWriter(errorFile).close();
+                    java.io.PrintWriter writer = new java.io.PrintWriter(
+                            new java.io.FileWriter(errorFile, stderrAppend));
+                    writer.close();
                 }
             } else if (command.equals("pwd")) {
                 System.out.println(currentDirectory.getCanonicalPath());
