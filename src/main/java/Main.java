@@ -31,6 +31,7 @@ public class Main {
 
                 String stdoutRedirectFile = null;
                 String stderrRedirectFile = null;
+                boolean stdoutAppend = false;
 
                 StringBuilder sb = new StringBuilder();
                 boolean first = true;
@@ -40,6 +41,8 @@ public class Main {
 
                     if (token.equals(">")
                             || token.equals("1>")
+                            || token.equals(">>")
+                            || token.equals("1>>")
                             || token.equals("2>")) {
 
                         if (i + 1 < tokens.size()) {
@@ -47,6 +50,7 @@ public class Main {
                                 stderrRedirectFile = tokens.get(i + 1);
                             } else {
                                 stdoutRedirectFile = tokens.get(i + 1);
+                                stdoutAppend = token.equals(">>") || token.equals("1>>");
                             }
 
                             i++;
@@ -73,7 +77,8 @@ public class Main {
                         outputFile = new File(currentDirectory, stdoutRedirectFile);
                     }
 
-                    java.io.PrintWriter writer = new java.io.PrintWriter(outputFile);
+                    java.io.PrintWriter writer = new java.io.PrintWriter(
+                            new java.io.FileWriter(outputFile, stdoutAppend));
                     writer.println(sb);
                     writer.close();
 
@@ -152,6 +157,7 @@ public class Main {
 
                     String stdoutRedirectFile = null;
                     String stderrRedirectFile = null;
+                    boolean stdoutAppend = false;
 
                     List<String> processArgs = new ArrayList<>();
                     processArgs.add(command);
@@ -159,7 +165,7 @@ public class Main {
                     for (int i = 1; i < tokens.size(); i++) {
                         String token = tokens.get(i);
 
-                        if (token.equals(">") || token.equals("1>") || token.equals("2>")) {
+                        if (token.equals(">") || token.equals("1>") || token.equals(">>") || token.equals("1>>") || token.equals("2>")) {
                             if (i + 1 < tokens.size()) {
                                 String fileName = tokens.get(i + 1);
 
@@ -167,6 +173,7 @@ public class Main {
                                     stderrRedirectFile = fileName;
                                 } else {
                                     stdoutRedirectFile = fileName;
+                                    stdoutAppend = token.equals(">>") || token.equals("1>>");
                                 }
 
                                 i++;
@@ -187,7 +194,11 @@ public class Main {
                                 ? new File(stdoutRedirectFile)
                                 : new File(currentDirectory, stdoutRedirectFile);
 
-                        pb.redirectOutput(outputFile);
+                        if (stdoutAppend) {
+                            pb.redirectOutput(ProcessBuilder.Redirect.appendTo(outputFile));
+                        } else {
+                            pb.redirectOutput(outputFile);
+                        }
 
                     } else {
 
