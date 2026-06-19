@@ -12,24 +12,47 @@ public class Main {
         File currentDirectory = new File(System.getProperty("user.dir"));
 
         while (true) {
+
             System.out.print("$ ");
             String input = scanner.nextLine();
 
-            if (input.equals("exit")) {
+            List<String> tokens = parseCommand(input);
+
+            if (tokens.isEmpty()) {
+                continue;
+            }
+
+            String command = tokens.get(0);
+
+            if (command.equals("exit")) {
                 break;
             }
 
-            else if (input.startsWith("echo ")) {
-                System.out.println(input.substring(5));
+            else if (command.equals("echo")) {
+
+                StringBuilder sb = new StringBuilder();
+
+                for (int i = 1; i < tokens.size(); i++) {
+                    if (i > 1) {
+                        sb.append(" ");
+                    }
+                    sb.append(tokens.get(i));
+                }
+
+                System.out.println(sb);
             }
 
-            else if (input.equals("pwd")) {
+            else if (command.equals("pwd")) {
                 System.out.println(currentDirectory.getCanonicalPath());
             }
 
-            else if (input.startsWith("cd ")) {
+            else if (command.equals("cd")) {
 
-                String path = input.substring(3);
+                if (tokens.size() < 2) {
+                    continue;
+                }
+
+                String path = tokens.get(1);
 
                 File newDirectory;
 
@@ -50,48 +73,41 @@ public class Main {
                 }
             }
 
-            else if (input.startsWith("type ")) {
+            else if (command.equals("type")) {
 
-                String command = input.substring(5);
+                if (tokens.size() < 2) {
+                    continue;
+                }
 
-                if (command.equals("echo")
-                        || command.equals("exit")
-                        || command.equals("type")
-                        || command.equals("pwd")
-                        || command.equals("cd")) {
+                String target = tokens.get(1);
 
-                    System.out.println(command + " is a shell builtin");
+                if (target.equals("echo")
+                        || target.equals("exit")
+                        || target.equals("type")
+                        || target.equals("pwd")
+                        || target.equals("cd")) {
+
+                    System.out.println(target + " is a shell builtin");
 
                 } else {
 
-                    String executablePath = findExecutable(command);
+                    String executablePath = findExecutable(target);
 
                     if (executablePath != null) {
-                        System.out.println(command + " is " + executablePath);
+                        System.out.println(target + " is " + executablePath);
                     } else {
-                        System.out.println(command + ": not found");
+                        System.out.println(target + ": not found");
                     }
                 }
             }
 
             else {
 
-                String[] parts = input.split(" ");
-                String command = parts[0];
-
                 String executablePath = findExecutable(command);
 
                 if (executablePath != null) {
 
-                    List<String> commandWithArgs = new ArrayList<>();
-
-                    commandWithArgs.add(command);
-
-                    for (int i = 1; i < parts.length; i++) {
-                        commandWithArgs.add(parts[i]);
-                    }
-
-                    ProcessBuilder pb = new ProcessBuilder(commandWithArgs);
+                    ProcessBuilder pb = new ProcessBuilder(tokens);
 
                     pb.directory(currentDirectory);
                     pb.inheritIO();
@@ -104,6 +120,42 @@ public class Main {
                 }
             }
         }
+    }
+
+    private static List<String> parseCommand(String input) {
+
+        List<String> tokens = new ArrayList<>();
+
+        StringBuilder current = new StringBuilder();
+
+        boolean inSingleQuote = false;
+
+        for (int i = 0; i < input.length(); i++) {
+
+            char ch = input.charAt(i);
+
+            if (ch == '\'') {
+                inSingleQuote = !inSingleQuote;
+            }
+
+            else if (Character.isWhitespace(ch) && !inSingleQuote) {
+
+                if (current.length() > 0) {
+                    tokens.add(current.toString());
+                    current.setLength(0);
+                }
+            }
+
+            else {
+                current.append(ch);
+            }
+        }
+
+        if (current.length() > 0) {
+            tokens.add(current.toString());
+        }
+
+        return tokens;
     }
 
     private static String findExecutable(String command) {
