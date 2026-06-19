@@ -96,7 +96,15 @@ public class Main {
 
                 if (executablePath != null) {
 
-                    ProcessBuilder pb = new ProcessBuilder(tokens);
+                    List<String> processArgs = new ArrayList<>();
+
+                    processArgs.add(executablePath);
+
+                    for (int i = 1; i < tokens.size(); i++) {
+                        processArgs.add(tokens.get(i));
+                    }
+
+                    ProcessBuilder pb = new ProcessBuilder(processArgs);
 
                     pb.directory(currentDirectory);
                     pb.inheritIO();
