@@ -29,19 +29,29 @@ public class Main {
                 break;
             } else if (command.equals("echo")) {
 
-                String redirectFile = null;
-                StringBuilder sb = new StringBuilder();
+                String stdoutRedirectFile = null;
+                String stderrRedirectFile = null;
 
+                StringBuilder sb = new StringBuilder();
                 boolean first = true;
 
                 for (int i = 1; i < tokens.size(); i++) {
+                    String token = tokens.get(i);
 
-                    if (tokens.get(i).equals(">")
-                            || tokens.get(i).equals("1>")) {
+                    if (token.equals(">")
+                            || token.equals("1>")
+                            || token.equals("2>")) {
 
                         if (i + 1 < tokens.size()) {
-                            redirectFile = tokens.get(i + 1);
+                            if (token.equals("2>")) {
+                                stderrRedirectFile = tokens.get(i + 1);
+                            } else {
+                                stdoutRedirectFile = tokens.get(i + 1);
+                            }
+
+                            i++;
                         }
+
                         break;
                     }
 
@@ -49,18 +59,18 @@ public class Main {
                         sb.append(" ");
                     }
 
-                    sb.append(tokens.get(i));
+                    sb.append(token);
                     first = false;
                 }
 
-                if (redirectFile != null) {
+                if (stdoutRedirectFile != null) {
 
                     File outputFile;
 
-                    if (redirectFile.startsWith("/")) {
-                        outputFile = new File(redirectFile);
+                    if (stdoutRedirectFile.startsWith("/")) {
+                        outputFile = new File(stdoutRedirectFile);
                     } else {
-                        outputFile = new File(currentDirectory, redirectFile);
+                        outputFile = new File(currentDirectory, stdoutRedirectFile);
                     }
 
                     java.io.PrintWriter writer = new java.io.PrintWriter(outputFile);
@@ -69,6 +79,19 @@ public class Main {
 
                 } else {
                     System.out.println(sb);
+                }
+
+                if (stderrRedirectFile != null) {
+
+                    File errorFile;
+
+                    if (stderrRedirectFile.startsWith("/")) {
+                        errorFile = new File(stderrRedirectFile);
+                    } else {
+                        errorFile = new File(currentDirectory, stderrRedirectFile);
+                    }
+
+                    new java.io.PrintWriter(errorFile).close();
                 }
             } else if (command.equals("pwd")) {
                 System.out.println(currentDirectory.getCanonicalPath());
