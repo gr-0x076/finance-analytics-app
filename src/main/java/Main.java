@@ -1,5 +1,7 @@
-import java.util.*;
-import java.io.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 
 public class Main {
 
@@ -18,12 +20,17 @@ public class Main {
                 System.out.println(input.substring(5));
             }
 
+            else if (input.equals("pwd")) {
+                System.out.println(System.getProperty("user.dir"));
+            }
+
             else if (input.startsWith("type ")) {
                 String command = input.substring(5);
 
                 if (command.equals("echo")
                         || command.equals("exit")
-                        || command.equals("type")) {
+                        || command.equals("type")
+                        || command.equals("pwd")) {
 
                     System.out.println(command + " is a shell builtin");
                 } else {
@@ -44,13 +51,13 @@ public class Main {
                 String executablePath = findExecutable(command);
 
                 if (executablePath != null) {
-List<String> commandWithArgs = new ArrayList<>();
+                    List<String> commandWithArgs = new ArrayList<>();
 
-commandWithArgs.add(command);
+                    commandWithArgs.add(command);
 
-for (int i = 1; i < parts.length; i++) {
-    commandWithArgs.add(parts[i]);
-}
+                    for (int i = 1; i < parts.length; i++) {
+                        commandWithArgs.add(parts[i]);
+                    }
 
                     ProcessBuilder pb = new ProcessBuilder(commandWithArgs);
                     pb.inheritIO();
