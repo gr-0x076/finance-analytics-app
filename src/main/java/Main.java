@@ -124,55 +124,57 @@ public class Main {
 
     private static List<String> parseCommand(String input) {
 
-        List<String> tokens = new ArrayList<>();
-        StringBuilder current = new StringBuilder();
+    List<String> tokens = new ArrayList<>();
+    StringBuilder current = new StringBuilder();
 
-        boolean inSingleQuote = false;
-        boolean inDoubleQuote = false;
+    boolean inSingleQuote = false;
+    boolean inDoubleQuote = false;
 
-        for (int i = 0; i < input.length(); i++) {
+    for (int i = 0; i < input.length(); i++) {
 
-            char ch = input.charAt(i);
+        char ch = input.charAt(i);
 
-            if (!inSingleQuote && ch == '\\') {
-
-                if (i + 1 < input.length()) {
-                    current.append(input.charAt(i + 1));
-                    i++;
-                }
-
-                continue;
-            }
-
-            if (ch == '\'' && !inDoubleQuote) {
-                inSingleQuote = !inSingleQuote;
-            }
-
-            else if (ch == '"' && !inSingleQuote) {
-                inDoubleQuote = !inDoubleQuote;
-            }
-
-            else if (Character.isWhitespace(ch)
-                    && !inSingleQuote
-                    && !inDoubleQuote) {
-
-                if (current.length() > 0) {
-                    tokens.add(current.toString());
-                    current.setLength(0);
-                }
-            }
-
-            else {
-                current.append(ch);
-            }
+        if (ch == '\'' && !inDoubleQuote) {
+            inSingleQuote = !inSingleQuote;
+            continue;
         }
 
-        if (current.length() > 0) {
-            tokens.add(current.toString());
+        if (ch == '"' && !inSingleQuote) {
+            inDoubleQuote = !inDoubleQuote;
+            continue;
         }
 
-        return tokens;
+        // Backslashes only escape outside quotes
+        if (ch == '\\' && !inSingleQuote && !inDoubleQuote) {
+
+            if (i + 1 < input.length()) {
+                current.append(input.charAt(i + 1));
+                i++;
+            }
+
+            continue;
+        }
+
+        if (Character.isWhitespace(ch)
+                && !inSingleQuote
+                && !inDoubleQuote) {
+
+            if (current.length() > 0) {
+                tokens.add(current.toString());
+                current.setLength(0);
+            }
+        }
+        else {
+            current.append(ch);
+        }
     }
+
+    if (current.length() > 0) {
+        tokens.add(current.toString());
+    }
+
+    return tokens;
+}
 
     private static String findExecutable(String command) {
 
