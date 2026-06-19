@@ -29,17 +29,48 @@ public class Main {
                 break;
             } else if (command.equals("echo")) {
 
-                StringBuilder sb = new StringBuilder();
+    String redirectFile = null;
+    StringBuilder sb = new StringBuilder();
 
-                for (int i = 1; i < tokens.size(); i++) {
-                    if (i > 1) {
-                        sb.append(" ");
-                    }
-                    sb.append(tokens.get(i));
-                }
+    boolean first = true;
 
-                System.out.println(sb);
-            } else if (command.equals("pwd")) {
+    for (int i = 1; i < tokens.size(); i++) {
+
+        if (tokens.get(i).equals(">") ||
+            tokens.get(i).equals("1>")) {
+
+            if (i + 1 < tokens.size()) {
+                redirectFile = tokens.get(i + 1);
+            }
+            break;
+        }
+
+        if (!first) {
+            sb.append(" ");
+        }
+
+        sb.append(tokens.get(i));
+        first = false;
+    }
+
+    if (redirectFile != null) {
+
+        File outputFile;
+
+        if (redirectFile.startsWith("/")) {
+            outputFile = new File(redirectFile);
+        } else {
+            outputFile = new File(currentDirectory, redirectFile);
+        }
+
+        java.io.PrintWriter writer = new java.io.PrintWriter(outputFile);
+        writer.println(sb);
+        writer.close();
+
+    } else {
+        System.out.println(sb);
+    }
+} else if (command.equals("pwd")) {
                 System.out.println(currentDirectory.getCanonicalPath());
             } else if (command.equals("cd")) {
 
