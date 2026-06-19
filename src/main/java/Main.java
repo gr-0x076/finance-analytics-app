@@ -182,21 +182,29 @@ public class Main {
                     pb.directory(currentDirectory);
 
                     if (stdoutRedirectFile != null) {
+
                         File outputFile = stdoutRedirectFile.startsWith("/")
                                 ? new File(stdoutRedirectFile)
                                 : new File(currentDirectory, stdoutRedirectFile);
+
                         pb.redirectOutput(outputFile);
+
+                    } else {
+
+                        pb.redirectOutput(ProcessBuilder.Redirect.INHERIT);
                     }
 
                     if (stderrRedirectFile != null) {
+
                         File errorFile = stderrRedirectFile.startsWith("/")
                                 ? new File(stderrRedirectFile)
                                 : new File(currentDirectory, stderrRedirectFile);
-                        pb.redirectError(errorFile);
-                    }
 
-                    if (stdoutRedirectFile == null && stderrRedirectFile == null) {
-                        pb.inheritIO();
+                        pb.redirectError(errorFile);
+
+                    } else {
+
+                        pb.redirectError(ProcessBuilder.Redirect.INHERIT);
                     }
 
                     Process process = pb.start();
