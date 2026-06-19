@@ -154,7 +154,7 @@ public class Main {
                     String stderrRedirectFile = null;
 
                     List<String> processArgs = new ArrayList<>();
-                    processArgs.add(executablePath);
+                    processArgs.add(command);
 
                     for (int i = 1; i < tokens.size(); i++) {
                         String token = tokens.get(i);
