@@ -44,13 +44,13 @@ public class Main {
                 String executablePath = findExecutable(command);
 
                 if (executablePath != null) {
-                    List<String> commandWithArgs = new ArrayList<>();
+List<String> commandWithArgs = new ArrayList<>();
 
-                    commandWithArgs.add(executablePath);
+commandWithArgs.add(command);
 
-                    for (int i = 1; i < parts.length; i++) {
-                        commandWithArgs.add(parts[i]);
-                    }
+for (int i = 1; i < parts.length; i++) {
+    commandWithArgs.add(parts[i]);
+}
 
                     ProcessBuilder pb = new ProcessBuilder(commandWithArgs);
                     pb.inheritIO();
