@@ -24,22 +24,30 @@ public class Main {
             }
 
             else if (input.equals("pwd")) {
-                System.out.println(currentDirectory.getAbsolutePath());
+                System.out.println(currentDirectory.getCanonicalPath());
             }
 
             else if (input.startsWith("cd ")) {
+
                 String path = input.substring(3);
 
-                File newDirectory = new File(path);
+                File newDirectory;
+
+                if (path.startsWith("/")) {
+                    newDirectory = new File(path);
+                } else {
+                    newDirectory = new File(currentDirectory, path);
+                }
 
                 if (newDirectory.exists() && newDirectory.isDirectory()) {
-                    currentDirectory = newDirectory;
+                    currentDirectory = newDirectory.getCanonicalFile();
                 } else {
                     System.out.println("cd: " + path + ": No such file or directory");
                 }
             }
 
             else if (input.startsWith("type ")) {
+
                 String command = input.substring(5);
 
                 if (command.equals("echo")
@@ -49,7 +57,9 @@ public class Main {
                         || command.equals("cd")) {
 
                     System.out.println(command + " is a shell builtin");
+
                 } else {
+
                     String executablePath = findExecutable(command);
 
                     if (executablePath != null) {
@@ -61,6 +71,7 @@ public class Main {
             }
 
             else {
+
                 String[] parts = input.split(" ");
                 String command = parts[0];
 
