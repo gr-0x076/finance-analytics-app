@@ -122,48 +122,57 @@ public class Main {
         }
     }
 
-private static List<String> parseCommand(String input) {
+    private static List<String> parseCommand(String input) {
 
-    List<String> tokens = new ArrayList<>();
+        List<String> tokens = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
 
-    StringBuilder current = new StringBuilder();
+        boolean inSingleQuote = false;
+        boolean inDoubleQuote = false;
 
-    boolean inSingleQuote = false;
-    boolean inDoubleQuote = false;
+        for (int i = 0; i < input.length(); i++) {
 
-    for (int i = 0; i < input.length(); i++) {
+            char ch = input.charAt(i);
 
-        char ch = input.charAt(i);
+            if (!inSingleQuote && ch == '\\') {
 
-        if (ch == '\'' && !inDoubleQuote) {
-            inSingleQuote = !inSingleQuote;
-        }
+                if (i + 1 < input.length()) {
+                    current.append(input.charAt(i + 1));
+                    i++;
+                }
 
-        else if (ch == '"' && !inSingleQuote) {
-            inDoubleQuote = !inDoubleQuote;
-        }
+                continue;
+            }
 
-        else if (Character.isWhitespace(ch)
-                && !inSingleQuote
-                && !inDoubleQuote) {
+            if (ch == '\'' && !inDoubleQuote) {
+                inSingleQuote = !inSingleQuote;
+            }
 
-            if (current.length() > 0) {
-                tokens.add(current.toString());
-                current.setLength(0);
+            else if (ch == '"' && !inSingleQuote) {
+                inDoubleQuote = !inDoubleQuote;
+            }
+
+            else if (Character.isWhitespace(ch)
+                    && !inSingleQuote
+                    && !inDoubleQuote) {
+
+                if (current.length() > 0) {
+                    tokens.add(current.toString());
+                    current.setLength(0);
+                }
+            }
+
+            else {
+                current.append(ch);
             }
         }
 
-        else {
-            current.append(ch);
+        if (current.length() > 0) {
+            tokens.add(current.toString());
         }
-    }
 
-    if (current.length() > 0) {
-        tokens.add(current.toString());
+        return tokens;
     }
-
-    return tokens;
-}
 
     private static String findExecutable(String command) {
 
