@@ -158,6 +158,7 @@ public class Main {
                     String stdoutRedirectFile = null;
                     String stderrRedirectFile = null;
                     boolean stdoutAppend = false;
+                    boolean stderrAppend = false;
 
                     List<String> processArgs = new ArrayList<>();
                     processArgs.add(command);
@@ -165,12 +166,13 @@ public class Main {
                     for (int i = 1; i < tokens.size(); i++) {
                         String token = tokens.get(i);
 
-                        if (token.equals(">") || token.equals("1>") || token.equals(">>") || token.equals("1>>") || token.equals("2>")) {
+                        if (token.equals(">") || token.equals("1>") || token.equals(">>") || token.equals("1>>") || token.equals("2>") || token.equals("2>>")) {
                             if (i + 1 < tokens.size()) {
                                 String fileName = tokens.get(i + 1);
 
-                                if (token.equals("2>")) {
+                                if (token.equals("2>") || token.equals("2>>")) {
                                     stderrRedirectFile = fileName;
+                                    stderrAppend = token.equals("2>>");
                                 } else {
                                     stdoutRedirectFile = fileName;
                                     stdoutAppend = token.equals(">>") || token.equals("1>>");
@@ -211,7 +213,11 @@ public class Main {
                                 ? new File(stderrRedirectFile)
                                 : new File(currentDirectory, stderrRedirectFile);
 
-                        pb.redirectError(errorFile);
+                        if (stderrAppend) {
+                            pb.redirectError(ProcessBuilder.Redirect.appendTo(errorFile));
+                        } else {
+                            pb.redirectError(errorFile);
+                        }
 
                     } else {
 
