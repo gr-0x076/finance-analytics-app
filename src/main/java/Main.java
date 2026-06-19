@@ -29,48 +29,48 @@ public class Main {
                 break;
             } else if (command.equals("echo")) {
 
-    String redirectFile = null;
-    StringBuilder sb = new StringBuilder();
+                String redirectFile = null;
+                StringBuilder sb = new StringBuilder();
 
-    boolean first = true;
+                boolean first = true;
 
-    for (int i = 1; i < tokens.size(); i++) {
+                for (int i = 1; i < tokens.size(); i++) {
 
-        if (tokens.get(i).equals(">") ||
-            tokens.get(i).equals("1>")) {
+                    if (tokens.get(i).equals(">")
+                            || tokens.get(i).equals("1>")) {
 
-            if (i + 1 < tokens.size()) {
-                redirectFile = tokens.get(i + 1);
-            }
-            break;
-        }
+                        if (i + 1 < tokens.size()) {
+                            redirectFile = tokens.get(i + 1);
+                        }
+                        break;
+                    }
 
-        if (!first) {
-            sb.append(" ");
-        }
+                    if (!first) {
+                        sb.append(" ");
+                    }
 
-        sb.append(tokens.get(i));
-        first = false;
-    }
+                    sb.append(tokens.get(i));
+                    first = false;
+                }
 
-    if (redirectFile != null) {
+                if (redirectFile != null) {
 
-        File outputFile;
+                    File outputFile;
 
-        if (redirectFile.startsWith("/")) {
-            outputFile = new File(redirectFile);
-        } else {
-            outputFile = new File(currentDirectory, redirectFile);
-        }
+                    if (redirectFile.startsWith("/")) {
+                        outputFile = new File(redirectFile);
+                    } else {
+                        outputFile = new File(currentDirectory, redirectFile);
+                    }
 
-        java.io.PrintWriter writer = new java.io.PrintWriter(outputFile);
-        writer.println(sb);
-        writer.close();
+                    java.io.PrintWriter writer = new java.io.PrintWriter(outputFile);
+                    writer.println(sb);
+                    writer.close();
 
-    } else {
-        System.out.println(sb);
-    }
-} else if (command.equals("pwd")) {
+                } else {
+                    System.out.println(sb);
+                }
+            } else if (command.equals("pwd")) {
                 System.out.println(currentDirectory.getCanonicalPath());
             } else if (command.equals("cd")) {
 
@@ -127,48 +127,57 @@ public class Main {
 
                 if (executablePath != null) {
 
-                    String redirectFile = null;
+                    String stdoutRedirectFile = null;
+                    String stderrRedirectFile = null;
 
-List<String> processArgs = new ArrayList<>();
-processArgs.add(command);
+                    List<String> processArgs = new ArrayList<>();
+                    processArgs.add(executablePath);
 
                     for (int i = 1; i < tokens.size(); i++) {
-                        if (tokens.get(i).equals(">")
-                                || tokens.get(i).equals("1>")) {
+                        String token = tokens.get(i);
 
+                        if (token.equals(">") || token.equals("1>") || token.equals("2>")) {
                             if (i + 1 < tokens.size()) {
-                                redirectFile = tokens.get(i + 1);
+                                String fileName = tokens.get(i + 1);
+
+                                if (token.equals("2>")) {
+                                    stderrRedirectFile = fileName;
+                                } else {
+                                    stdoutRedirectFile = fileName;
+                                }
+
                                 i++;
+                                continue;
                             }
-                        } else {
-                            processArgs.add(tokens.get(i));
                         }
+
+                        processArgs.add(token);
                     }
 
-ProcessBuilder pb = new ProcessBuilder(processArgs);
+                    ProcessBuilder pb = new ProcessBuilder(processArgs);
 
-pb.directory(currentDirectory);
+                    pb.directory(currentDirectory);
 
-if (redirectFile != null) {
+                    if (stdoutRedirectFile != null) {
+                        File outputFile = stdoutRedirectFile.startsWith("/")
+                                ? new File(stdoutRedirectFile)
+                                : new File(currentDirectory, stdoutRedirectFile);
+                        pb.redirectOutput(outputFile);
+                    }
 
-    File outputFile;
+                    if (stderrRedirectFile != null) {
+                        File errorFile = stderrRedirectFile.startsWith("/")
+                                ? new File(stderrRedirectFile)
+                                : new File(currentDirectory, stderrRedirectFile);
+                        pb.redirectError(errorFile);
+                    }
 
-    if (redirectFile.startsWith("/")) {
-        outputFile = new File(redirectFile);
-    } else {
-        outputFile = new File(currentDirectory, redirectFile);
-    }
+                    if (stdoutRedirectFile == null && stderrRedirectFile == null) {
+                        pb.inheritIO();
+                    }
 
-    pb.redirectOutput(outputFile);
-    pb.redirectError(ProcessBuilder.Redirect.INHERIT);
-
-} else {
-
-    pb.inheritIO();
-}
-
-Process process = pb.start();
-process.waitFor();
+                    Process process = pb.start();
+                    process.waitFor();
 
                 } else {
                     System.out.println(command + ": command not found");
