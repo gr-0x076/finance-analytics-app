@@ -114,17 +114,30 @@ public class Main {
                         }
                     }
 
-                    ProcessBuilder pb = new ProcessBuilder(processArgs);
+ProcessBuilder pb = new ProcessBuilder(processArgs);
 
-                    if (redirectFile != null) {
-                        pb.redirectOutput(new File(currentDirectory, redirectFile));
-                    }
+pb.directory(currentDirectory);
 
-                    pb.directory(currentDirectory);
-                    pb.inheritIO();
+if (redirectFile != null) {
 
-                    Process process = pb.start();
-                    process.waitFor();
+    File outputFile;
+
+    if (redirectFile.startsWith("/")) {
+        outputFile = new File(redirectFile);
+    } else {
+        outputFile = new File(currentDirectory, redirectFile);
+    }
+
+    pb.redirectOutput(outputFile);
+    pb.redirectError(ProcessBuilder.Redirect.INHERIT);
+
+} else {
+
+    pb.inheritIO();
+}
+
+Process process = pb.start();
+process.waitFor();
 
                 } else {
                     System.out.println(command + ": command not found");
