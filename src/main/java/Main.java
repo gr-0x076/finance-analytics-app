@@ -122,41 +122,48 @@ public class Main {
         }
     }
 
-    private static List<String> parseCommand(String input) {
+private static List<String> parseCommand(String input) {
 
-        List<String> tokens = new ArrayList<>();
+    List<String> tokens = new ArrayList<>();
 
-        StringBuilder current = new StringBuilder();
+    StringBuilder current = new StringBuilder();
 
-        boolean inSingleQuote = false;
+    boolean inSingleQuote = false;
+    boolean inDoubleQuote = false;
 
-        for (int i = 0; i < input.length(); i++) {
+    for (int i = 0; i < input.length(); i++) {
 
-            char ch = input.charAt(i);
+        char ch = input.charAt(i);
 
-            if (ch == '\'') {
-                inSingleQuote = !inSingleQuote;
-            }
+        if (ch == '\'' && !inDoubleQuote) {
+            inSingleQuote = !inSingleQuote;
+        }
 
-            else if (Character.isWhitespace(ch) && !inSingleQuote) {
+        else if (ch == '"' && !inSingleQuote) {
+            inDoubleQuote = !inDoubleQuote;
+        }
 
-                if (current.length() > 0) {
-                    tokens.add(current.toString());
-                    current.setLength(0);
-                }
-            }
+        else if (Character.isWhitespace(ch)
+                && !inSingleQuote
+                && !inDoubleQuote) {
 
-            else {
-                current.append(ch);
+            if (current.length() > 0) {
+                tokens.add(current.toString());
+                current.setLength(0);
             }
         }
 
-        if (current.length() > 0) {
-            tokens.add(current.toString());
+        else {
+            current.append(ch);
         }
-
-        return tokens;
     }
+
+    if (current.length() > 0) {
+        tokens.add(current.toString());
+    }
+
+    return tokens;
+}
 
     private static String findExecutable(String command) {
 
