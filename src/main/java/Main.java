@@ -379,7 +379,15 @@ public class Main {
                         String completer = completions.get(command);
 
                         if (completer != null) {
-                            String candidate = runCompleter(completer);
+                            String previousWord = "";
+                            List<String> previousTokens = parseCommand(
+                                    text.substring(text.indexOf(' ') + 1, lastSpaceIdx));
+                            if (!previousTokens.isEmpty()) {
+                                previousWord = previousTokens.get(previousTokens.size() - 1);
+                            }
+
+                            String candidate = runCompleter(
+                                    completer, command, rawToken, previousWord);
                             if (candidate != null) {
                                 String completion = base + candidate + " ";
                                 while (buffer.length() > 0) {
@@ -502,9 +510,11 @@ public class Main {
         }
     }
 
-    private static String runCompleter(String completer) {
+    private static String runCompleter(
+            String completer, String command, String currentWord, String previousWord) {
         try {
-            Process process = new ProcessBuilder(completer).start();
+            Process process = new ProcessBuilder(
+                    completer, command, currentWord, previousWord).start();
             java.io.BufferedReader reader = new java.io.BufferedReader(
                     new java.io.InputStreamReader(process.getInputStream()));
             String candidate = reader.readLine();
