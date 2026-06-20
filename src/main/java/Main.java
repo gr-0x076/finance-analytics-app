@@ -170,21 +170,24 @@ public class Main {
                     }
                     // other flags: no-op for now
                 } else if (command.equals("jobs")) {
-                    List<BackgroundJob> runningJobs = new ArrayList<>();
-                    for (BackgroundJob job : backgroundJobs) {
-                        if (job.process.isAlive()) {
-                            runningJobs.add(job);
+                    List<BackgroundJob> completedJobs = new ArrayList<>();
+                    for (int i = 0; i < backgroundJobs.size(); i++) {
+                        BackgroundJob job = backgroundJobs.get(i);
+                        boolean running = job.process.isAlive();
+                        char marker = i == backgroundJobs.size() - 1
+                                ? '+'
+                                : i == backgroundJobs.size() - 2 ? '-' : ' ';
+                        String commandText = running
+                                ? job.command
+                                : job.command.replaceFirst("\\s*&\\s*$", "");
+                        System.out.printf(
+                                "[%d]%c  %-24s%s%n",
+                                job.jobNumber, marker, running ? "Running" : "Done", commandText);
+                        if (!running) {
+                            completedJobs.add(job);
                         }
                     }
-                    for (int i = 0; i < runningJobs.size(); i++) {
-                        BackgroundJob job = runningJobs.get(i);
-                        char marker = i == runningJobs.size() - 1
-                                ? '+'
-                                : i == runningJobs.size() - 2 ? '-' : ' ';
-                            System.out.printf(
-                                    "[%d]%c  %-24s%s%n",
-                                    job.jobNumber, marker, "Running", job.command);
-                    }
+                    backgroundJobs.removeAll(completedJobs);
                 } else if (command.equals("type")) {
 
                     if (tokens.size() < 2) {
