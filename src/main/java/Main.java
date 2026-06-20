@@ -8,6 +8,7 @@ public class Main {
     private static final TerminalMode terminalMode = new TerminalMode();
     private static File currentDirectory = new File(System.getProperty("user.dir"));
     private static final java.util.Map<String, String> completions = new java.util.HashMap<>();
+    private static int nextJobNumber = 1;
 
     public static void main(String[] args) throws Exception {
 
@@ -23,6 +24,14 @@ public class Main {
 
                 if (tokens.isEmpty()) {
                     continue;
+                }
+
+                boolean runInBackground = tokens.get(tokens.size() - 1).equals("&");
+                if (runInBackground) {
+                    tokens.remove(tokens.size() - 1);
+                    if (tokens.isEmpty()) {
+                        continue;
+                    }
                 }
 
                 String command = tokens.get(0);
@@ -253,7 +262,11 @@ public class Main {
                         System.out.flush();
                         System.err.flush();
                         Process process = pb.start();
-                        process.waitFor();
+                        if (runInBackground) {
+                            System.out.println("[" + nextJobNumber++ + "] " + process.pid());
+                        } else {
+                            process.waitFor();
+                        }
 
                     } else {
                         System.out.println(command + ": command not found");
