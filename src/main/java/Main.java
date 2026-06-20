@@ -423,9 +423,14 @@ public class Main {
                                 lastWasTab = false;
                             } else {
                                 if (lastWasTab) {
+                                    List<String> displayMatches = new ArrayList<>();
+                                    for (String name : fileMatches) {
+                                        File f = new File(searchDir, name);
+                                        displayMatches.add(f.isDirectory() ? name + "/" : name);
+                                    }
                                     terminalMode.disableRawMode();
                                     System.out.println();
-                                    System.out.println(String.join("  ", fileMatches));
+                                    System.out.println(String.join("  ", displayMatches));
                                     System.out.print("$ " + buffer.toString());
                                     System.out.flush();
                                     terminalMode.enableRawMode();
