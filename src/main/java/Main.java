@@ -130,7 +130,11 @@ public class Main {
                         System.out.println("cd: " + path + ": No such file or directory");
                     }
                 } else if (command.equals("complete")) {
-                    // no-op for now: registers programmable completions
+                    if (tokens.size() >= 3 && tokens.get(1).equals("-p")) {
+                        String targetCmd = tokens.get(2);
+                        System.out.println("complete: " + targetCmd + ": no completion specification");
+                    }
+                    // other flags: no-op for now
                 } else if (command.equals("type")) {
 
                     if (tokens.size() < 2) {
