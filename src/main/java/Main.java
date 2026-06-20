@@ -387,7 +387,7 @@ public class Main {
                             }
 
                             String candidate = runCompleter(
-                                    completer, command, rawToken, previousWord);
+                                    completer, command, rawToken, previousWord, text);
                             if (candidate != null) {
                                 String completion = base + candidate + " ";
                                 while (buffer.length() > 0) {
@@ -511,10 +511,16 @@ public class Main {
     }
 
     private static String runCompleter(
-            String completer, String command, String currentWord, String previousWord) {
+            String completer, String command, String currentWord,
+            String previousWord, String commandLine) {
         try {
-            Process process = new ProcessBuilder(
-                    completer, command, currentWord, previousWord).start();
+            ProcessBuilder processBuilder = new ProcessBuilder(
+                    completer, command, currentWord, previousWord);
+            processBuilder.environment().put("COMP_LINE", commandLine);
+            processBuilder.environment().put(
+                    "COMP_POINT",
+                    String.valueOf(commandLine.getBytes(java.nio.charset.StandardCharsets.UTF_8).length));
+            Process process = processBuilder.start();
             java.io.BufferedReader reader = new java.io.BufferedReader(
                     new java.io.InputStreamReader(process.getInputStream()));
             String candidate = reader.readLine();
