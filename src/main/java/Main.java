@@ -382,7 +382,8 @@ public class Main {
                             String previousWord = "";
                             List<String> previousTokens = parseCommand(
                                     text.substring(0, lastSpaceIdx));
-                            if (previousTokens.size() > 1) {
+                            if ((!rawToken.isEmpty() && !previousTokens.isEmpty())
+                                    || previousTokens.size() > 1) {
                                 previousWord = previousTokens.get(previousTokens.size() - 1);
                             }
 
