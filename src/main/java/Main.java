@@ -51,9 +51,16 @@ public class Main {
 
                 int pipeIndex = tokens.indexOf("|");
                 if (pipeIndex > 0 && pipeIndex < tokens.size() - 1) {
-                    runPipeline(
-                            new ArrayList<>(tokens.subList(0, pipeIndex)),
-                            new ArrayList<>(tokens.subList(pipeIndex + 1, tokens.size())));
+                    List<List<String>> pipelineCommands = new ArrayList<>();
+                    int commandStart = 0;
+                    for (int i = 0; i <= tokens.size(); i++) {
+                        if (i == tokens.size() || tokens.get(i).equals("|")) {
+                            pipelineCommands.add(
+                                    new ArrayList<>(tokens.subList(commandStart, i)));
+                            commandStart = i + 1;
+                        }
+                    }
+                    runPipeline(pipelineCommands);
                     continue;
                 }
 
@@ -381,6 +388,41 @@ public class Main {
             upstream.destroy();
         }
         upstream.waitFor();
+    }
+
+    private static void runPipeline(List<List<String>> commands) throws Exception {
+        if (commands.size() == 2) {
+            runPipeline(commands.get(0), commands.get(1));
+            return;
+        }
+
+        List<ProcessBuilder> builders = new ArrayList<>();
+        for (int i = 0; i < commands.size(); i++) {
+            ProcessBuilder builder = new ProcessBuilder(commands.get(i));
+            builder.directory(currentDirectory);
+            builder.redirectError(ProcessBuilder.Redirect.INHERIT);
+            if (i == 0) {
+                builder.redirectInput(ProcessBuilder.Redirect.INHERIT);
+            }
+            if (i == commands.size() - 1) {
+                builder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+            }
+            builders.add(builder);
+        }
+
+        List<Process> processes = ProcessBuilder.startPipeline(builders);
+        Process lastProcess = processes.get(processes.size() - 1);
+        lastProcess.waitFor();
+
+        for (int i = 0; i < processes.size() - 1; i++) {
+            Process process = processes.get(i);
+            if (process.isAlive()) {
+                process.destroy();
+            }
+        }
+        for (int i = 0; i < processes.size() - 1; i++) {
+            processes.get(i).waitFor();
+        }
     }
 
     private static boolean isPipelineBuiltin(String command) {
