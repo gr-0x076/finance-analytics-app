@@ -8,7 +8,22 @@ public class Main {
     private static final TerminalMode terminalMode = new TerminalMode();
     private static File currentDirectory = new File(System.getProperty("user.dir"));
     private static final java.util.Map<String, String> completions = new java.util.HashMap<>();
+    private static final List<BackgroundJob> backgroundJobs = new ArrayList<>();
     private static int nextJobNumber = 1;
+
+    private static class BackgroundJob {
+        final int jobNumber;
+        final long pid;
+        final String command;
+        final Process process;
+
+        BackgroundJob(int jobNumber, long pid, String command, Process process) {
+            this.jobNumber = jobNumber;
+            this.pid = pid;
+            this.command = command;
+            this.process = process;
+        }
+    }
 
     public static void main(String[] args) throws Exception {
 
@@ -155,7 +170,13 @@ public class Main {
                     }
                     // other flags: no-op for now
                 } else if (command.equals("jobs")) {
-                    // no background jobs yet
+                    for (BackgroundJob job : backgroundJobs) {
+                        if (job.process.isAlive()) {
+                            System.out.printf(
+                                    "[%d]+  %-24s%s%n",
+                                    job.jobNumber, "Running", job.command);
+                        }
+                    }
                 } else if (command.equals("type")) {
 
                     if (tokens.size() < 2) {
@@ -264,7 +285,11 @@ public class Main {
                         System.err.flush();
                         Process process = pb.start();
                         if (runInBackground) {
-                            System.out.println("[" + nextJobNumber++ + "] " + process.pid());
+                            int jobNumber = nextJobNumber++;
+                            backgroundJobs.add(
+                                    new BackgroundJob(
+                                            jobNumber, process.pid(), input.trim(), process));
+                            System.out.println("[" + jobNumber + "] " + process.pid());
                         } else {
                             process.waitFor();
                         }
