@@ -312,17 +312,21 @@ public class Main {
                 }
 
                 if (ch == '\t') {
+                    String completion = null;
                     if (!buffer.toString().contains(" ")) {
-                        String completion = completeBuiltin(buffer.toString());
-                        if (completion != null) {
-                            while (buffer.length() > 0) {
-                                System.out.print("\b \b");
-                                buffer.setLength(buffer.length() - 1);
-                            }
-                            buffer.append(completion);
-                            System.out.print(completion);
-                            System.out.flush();
+                        completion = completeBuiltin(buffer.toString());
+                    }
+                    if (completion != null) {
+                        while (buffer.length() > 0) {
+                            System.out.print("\b \b");
+                            buffer.setLength(buffer.length() - 1);
                         }
+                        buffer.append(completion);
+                        System.out.print(completion);
+                        System.out.flush();
+                    } else {
+                        System.out.print("\u0007");
+                        System.out.flush();
                     }
                     continue;
                 }
