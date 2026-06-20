@@ -49,6 +49,14 @@ public class Main {
                     }
                 }
 
+                int pipeIndex = tokens.indexOf("|");
+                if (pipeIndex > 0 && pipeIndex < tokens.size() - 1) {
+                    runPipeline(
+                            new ArrayList<>(tokens.subList(0, pipeIndex)),
+                            new ArrayList<>(tokens.subList(pipeIndex + 1, tokens.size())));
+                    continue;
+                }
+
                 String command = tokens.get(0);
 
                 if (command.equals("exit")) {
@@ -316,6 +324,29 @@ public class Main {
         } finally {
             terminalMode.disableRawMode();
         }
+    }
+
+    private static void runPipeline(
+            List<String> firstCommand, List<String> secondCommand) throws Exception {
+        ProcessBuilder first = new ProcessBuilder(firstCommand);
+        ProcessBuilder second = new ProcessBuilder(secondCommand);
+
+        first.directory(currentDirectory);
+        second.directory(currentDirectory);
+        first.redirectInput(ProcessBuilder.Redirect.INHERIT);
+        first.redirectError(ProcessBuilder.Redirect.INHERIT);
+        second.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+        second.redirectError(ProcessBuilder.Redirect.INHERIT);
+
+        List<Process> processes = ProcessBuilder.startPipeline(List.of(first, second));
+        Process upstream = processes.get(0);
+        Process downstream = processes.get(1);
+
+        downstream.waitFor();
+        if (upstream.isAlive()) {
+            upstream.destroy();
+        }
+        upstream.waitFor();
     }
 
     private static void reapCompletedJobs() {
