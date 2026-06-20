@@ -2,20 +2,30 @@
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
+
+import org.jline.reader.Candidate;
+import org.jline.reader.Completer;
+import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
+import org.jline.reader.ParsedLine;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
 
 public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        Scanner scanner = new Scanner(System.in);
+        Terminal terminal = TerminalBuilder.builder().system(true).build();
+        LineReader reader = LineReaderBuilder.builder()
+                .terminal(terminal)
+                .completer(new BuiltinCompleter())
+                .build();
 
         File currentDirectory = new File(System.getProperty("user.dir"));
 
         while (true) {
 
-            System.out.print("$ ");
-            String input = scanner.nextLine();
+            String input = reader.readLine("$ ");
 
             List<String> tokens = parseCommand(input);
 
@@ -239,8 +249,29 @@ public class Main {
         }
     }
 
+    private static class BuiltinCompleter implements Completer {
+
+        private static final List<String> BUILTIN_COMMANDS = List.of("echo", "exit");
+
+        @Override
+        public void complete(LineReader reader, ParsedLine line, List<Candidate> candidates) {
+            String buffer = line.line().substring(0, line.cursor());
+            String trimmed = buffer.stripLeading();
+            if (trimmed.contains(" ")) {
+                return;
+            }
+
+            for (String command : BUILTIN_COMMANDS) {
+                if (command.startsWith(trimmed) && !command.equals(trimmed)) {
+                    candidates.add(new Candidate(command + " "));
+                }
+            }
+        }
+    }
+
     private static List<String> parseCommand(String input) {
 
+        
         List<String> tokens = new ArrayList<>();
         StringBuilder current = new StringBuilder();
 
