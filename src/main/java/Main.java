@@ -133,6 +133,8 @@ public class Main {
                 } else if (command.equals("complete")) {
                     if (tokens.size() >= 4 && tokens.get(1).equals("-C")) {
                         completions.put(tokens.get(3), tokens.get(2));
+                    } else if (tokens.size() >= 3 && tokens.get(1).equals("-r")) {
+                        completions.remove(tokens.get(2));
                     } else if (tokens.size() >= 3 && tokens.get(1).equals("-p")) {
                         String targetCmd = tokens.get(2);
                         String completer = completions.get(targetCmd);
