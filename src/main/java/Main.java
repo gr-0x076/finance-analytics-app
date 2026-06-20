@@ -328,6 +328,40 @@ public class Main {
 
     private static void runPipeline(
             List<String> firstCommand, List<String> secondCommand) throws Exception {
+        boolean firstBuiltin = isPipelineBuiltin(firstCommand.get(0));
+        boolean secondBuiltin = isPipelineBuiltin(secondCommand.get(0));
+
+        if (firstBuiltin && secondBuiltin) {
+            System.out.print(getPipelineBuiltinOutput(secondCommand));
+            return;
+        }
+
+        if (firstBuiltin) {
+            ProcessBuilder second = new ProcessBuilder(secondCommand);
+            second.directory(currentDirectory);
+            second.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+            second.redirectError(ProcessBuilder.Redirect.INHERIT);
+            Process process = second.start();
+            process.getOutputStream().write(
+                    getPipelineBuiltinOutput(firstCommand)
+                            .getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            process.getOutputStream().close();
+            process.waitFor();
+            return;
+        }
+
+        if (secondBuiltin) {
+            ProcessBuilder first = new ProcessBuilder(firstCommand);
+            first.directory(currentDirectory);
+            first.redirectInput(ProcessBuilder.Redirect.INHERIT);
+            first.redirectOutput(ProcessBuilder.Redirect.DISCARD);
+            first.redirectError(ProcessBuilder.Redirect.INHERIT);
+            Process process = first.start();
+            process.waitFor();
+            System.out.print(getPipelineBuiltinOutput(secondCommand));
+            return;
+        }
+
         ProcessBuilder first = new ProcessBuilder(firstCommand);
         ProcessBuilder second = new ProcessBuilder(secondCommand);
 
@@ -347,6 +381,40 @@ public class Main {
             upstream.destroy();
         }
         upstream.waitFor();
+    }
+
+    private static boolean isPipelineBuiltin(String command) {
+        return command.equals("echo") || command.equals("type") || command.equals("pwd");
+    }
+
+    private static String getPipelineBuiltinOutput(List<String> command) throws Exception {
+        if (command.get(0).equals("echo")) {
+            return String.join(" ", command.subList(1, command.size())) + System.lineSeparator();
+        }
+
+        if (command.get(0).equals("pwd")) {
+            return currentDirectory.getCanonicalPath() + System.lineSeparator();
+        }
+
+        if (command.size() < 2) {
+            return "";
+        }
+
+        String target = command.get(1);
+        if (target.equals("echo")
+                || target.equals("exit")
+                || target.equals("type")
+                || target.equals("pwd")
+                || target.equals("cd")
+                || target.equals("complete")
+                || target.equals("jobs")) {
+            return target + " is a shell builtin" + System.lineSeparator();
+        }
+
+        String executablePath = findExecutable(target);
+        return executablePath != null
+                ? target + " is " + executablePath + System.lineSeparator()
+                : target + ": not found" + System.lineSeparator();
     }
 
     private static void reapCompletedJobs() {
