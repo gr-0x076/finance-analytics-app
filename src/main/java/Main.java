@@ -9,7 +9,6 @@ public class Main {
     private static File currentDirectory = new File(System.getProperty("user.dir"));
     private static final java.util.Map<String, String> completions = new java.util.HashMap<>();
     private static final List<BackgroundJob> backgroundJobs = new ArrayList<>();
-    private static int nextJobNumber = 1;
 
     private static class BackgroundJob {
         final int jobNumber;
@@ -297,7 +296,10 @@ public class Main {
                         System.err.flush();
                         Process process = pb.start();
                         if (runInBackground) {
-                            int jobNumber = nextJobNumber++;
+                            int jobNumber = 1;
+                            for (BackgroundJob job : backgroundJobs) {
+                                jobNumber = Math.max(jobNumber, job.jobNumber + 1);
+                            }
                             backgroundJobs.add(
                                     new BackgroundJob(
                                             jobNumber, process.pid(), input.trim(), process));
