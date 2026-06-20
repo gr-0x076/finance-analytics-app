@@ -145,6 +145,8 @@ public class Main {
                         }
                     }
                     // other flags: no-op for now
+                } else if (command.equals("jobs")) {
+                    // no background jobs yet
                 } else if (command.equals("type")) {
 
                     if (tokens.size() < 2) {
@@ -158,7 +160,8 @@ public class Main {
                             || target.equals("type")
                             || target.equals("pwd")
                             || target.equals("cd")
-                            || target.equals("complete")) {
+                            || target.equals("complete")
+                            || target.equals("jobs")) {
 
                         System.out.println(target + " is a shell builtin");
 
@@ -570,7 +573,7 @@ public class Main {
         if (partial.isEmpty()) {
             return matches;
         }
-        List<String> builtins = List.of("echo", "exit", "type", "pwd", "cd", "complete");
+        List<String> builtins = List.of("echo", "exit", "type", "pwd", "cd", "complete", "jobs");
 
         for (String b : builtins) {
             if (b.startsWith(partial)) {
