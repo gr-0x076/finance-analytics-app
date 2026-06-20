@@ -314,7 +314,7 @@ public class Main {
                 if (ch == '\t') {
                     String completion = null;
                     if (!buffer.toString().contains(" ")) {
-                        completion = completeBuiltin(buffer.toString());
+                        completion = completeCommand(buffer.toString());
                     }
                     if (completion != null) {
                         while (buffer.length() > 0) {
@@ -349,20 +349,44 @@ public class Main {
         }
     }
 
-    private static String completeBuiltin(String partial) {
+    private static String completeCommand(String partial) {
         if (partial.isEmpty()) {
             return null;
         }
         List<String> builtins = List.of("echo", "exit", "type", "pwd", "cd");
-        List<String> matches = new ArrayList<>();
+        java.util.TreeSet<String> matches = new java.util.TreeSet<>();
+
         for (String b : builtins) {
             if (b.startsWith(partial)) {
                 matches.add(b);
             }
         }
-        if (matches.size() == 1) {
-            return matches.get(0) + " ";
+
+        String pathEnv = System.getenv("PATH");
+        if (pathEnv != null) {
+            String[] directories = pathEnv.split(File.pathSeparator);
+            for (String dir : directories) {
+                File folder = new File(dir);
+                if (folder.exists() && folder.isDirectory()) {
+                    File[] files = folder.listFiles();
+                    if (files != null) {
+                        for (File file : files) {
+                            if (file.isFile() && file.canExecute()) {
+                                String name = file.getName();
+                                if (name.startsWith(partial)) {
+                                    matches.add(name);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
+
+        if (matches.size() == 1) {
+            return matches.first() + " ";
+        }
+
         return null;
     }
 
