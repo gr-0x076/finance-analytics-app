@@ -358,16 +358,36 @@ public class Main {
                         }
                     } else {
                         int lastSpaceIdx = text.lastIndexOf(' ');
-                        String prefix = text.substring(lastSpaceIdx + 1);
+                        String rawToken = text.substring(lastSpaceIdx + 1);
                         String base = text.substring(0, lastSpaceIdx + 1);
 
+                        String dirPathStr = "";
+                        String prefix = rawToken;
+                        File searchDir = currentDirectory;
+
+                        if (rawToken.contains("/")) {
+                            int lastSlashIdx = rawToken.lastIndexOf('/');
+                            dirPathStr = rawToken.substring(0, lastSlashIdx + 1);
+                            prefix = rawToken.substring(lastSlashIdx + 1);
+                            if (dirPathStr.startsWith("~/")) {
+                                String home = System.getenv("HOME");
+                                searchDir = new File(home, dirPathStr.substring(2));
+                            } else if (dirPathStr.startsWith("/")) {
+                                searchDir = new File(dirPathStr);
+                            } else {
+                                searchDir = new File(currentDirectory, dirPathStr);
+                            }
+                        }
+
                         java.util.TreeSet<String> fileMatches = new java.util.TreeSet<>();
-                        File[] files = currentDirectory.listFiles();
-                        if (files != null) {
-                            for (File file : files) {
-                                String name = file.getName();
-                                if (name.startsWith(prefix)) {
-                                    fileMatches.add(name);
+                        if (searchDir.exists() && searchDir.isDirectory()) {
+                            File[] files = searchDir.listFiles();
+                            if (files != null) {
+                                for (File file : files) {
+                                    String name = file.getName();
+                                    if (name.startsWith(prefix)) {
+                                        fileMatches.add(name);
+                                    }
                                 }
                             }
                         }
@@ -377,7 +397,7 @@ public class Main {
                             System.out.flush();
                             lastWasTab = false;
                         } else if (fileMatches.size() == 1) {
-                            String completion = base + fileMatches.first() + " ";
+                            String completion = base + dirPathStr + fileMatches.first() + " ";
                             while (buffer.length() > 0) {
                                 System.out.print("\b \b");
                                 buffer.setLength(buffer.length() - 1);
@@ -389,7 +409,7 @@ public class Main {
                         } else {
                             String lcp = getLongestCommonPrefix(fileMatches);
                             if (lcp.length() > prefix.length()) {
-                                String completion = base + lcp;
+                                String completion = base + dirPathStr + lcp;
                                 while (buffer.length() > 0) {
                                     System.out.print("\b \b");
                                     buffer.setLength(buffer.length() - 1);
