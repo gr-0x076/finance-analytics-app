@@ -129,6 +129,8 @@ public class Main {
                     } else {
                         System.out.println("cd: " + path + ": No such file or directory");
                     }
+                } else if (command.equals("complete")) {
+                    // no-op for now: registers programmable completions
                 } else if (command.equals("type")) {
 
                     if (tokens.size() < 2) {
@@ -141,7 +143,8 @@ public class Main {
                             || target.equals("exit")
                             || target.equals("type")
                             || target.equals("pwd")
-                            || target.equals("cd")) {
+                            || target.equals("cd")
+                            || target.equals("complete")) {
 
                         System.out.println(target + " is a shell builtin");
 
@@ -471,7 +474,7 @@ public class Main {
         if (partial.isEmpty()) {
             return matches;
         }
-        List<String> builtins = List.of("echo", "exit", "type", "pwd", "cd");
+        List<String> builtins = List.of("echo", "exit", "type", "pwd", "cd", "complete");
 
         for (String b : builtins) {
             if (b.startsWith(partial)) {
