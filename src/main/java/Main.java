@@ -3,29 +3,18 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jline.reader.Candidate;
-import org.jline.reader.Completer;
-import org.jline.reader.LineReader;
-import org.jline.reader.LineReaderBuilder;
-import org.jline.reader.ParsedLine;
-import org.jline.terminal.Terminal;
-import org.jline.terminal.TerminalBuilder;
-
 public class Main {
 
     public static void main(String[] args) throws Exception {
-
-        Terminal terminal = TerminalBuilder.builder().system(true).build();
-        LineReader reader = LineReaderBuilder.builder()
-                .terminal(terminal)
-                .completer(new BuiltinCompleter())
-                .build();
 
         File currentDirectory = new File(System.getProperty("user.dir"));
 
         while (true) {
 
-            String input = reader.readLine("$ ");
+            String input = readLineWithTabCompletion();
+            if (input == null) {
+                break;
+            }
 
             List<String> tokens = parseCommand(input);
 
@@ -249,24 +238,67 @@ public class Main {
         }
     }
 
-    private static class BuiltinCompleter implements Completer {
+    private static String readLineWithTabCompletion() throws java.io.IOException {
+        StringBuilder buffer = new StringBuilder();
+        System.out.print("$ ");
+        System.out.flush();
 
-        private static final List<String> BUILTIN_COMMANDS = List.of("echo", "exit");
-
-        @Override
-        public void complete(LineReader reader, ParsedLine line, List<Candidate> candidates) {
-            String buffer = line.line().substring(0, line.cursor());
-            String trimmed = buffer.stripLeading();
-            if (trimmed.contains(" ")) {
-                return;
+        while (true) {
+            int ch = System.in.read();
+            if (ch == -1) {
+                return null;
             }
 
-            for (String command : BUILTIN_COMMANDS) {
-                if (command.startsWith(trimmed) && !command.equals(trimmed)) {
-                    candidates.add(new Candidate(command + " "));
+            if (ch == '\r') {
+                int next = System.in.read();
+                if (next != '\n' && next != -1) {
+                    // ignore extra character if present
                 }
+                System.out.println();
+                return buffer.toString();
             }
+
+            if (ch == '\n') {
+                System.out.println();
+                return buffer.toString();
+            }
+
+            if (ch == '\t') {
+                if (!buffer.toString().contains(" ")) {
+                    String completion = completeBuiltin(buffer.toString());
+                    if (completion != null) {
+                        String suffix = completion.substring(buffer.length());
+                        buffer.append(suffix);
+                        System.out.print(suffix);
+                        System.out.flush();
+                    }
+                }
+                continue;
+            }
+
+            if (ch == 8 || ch == 127) {
+                if (buffer.length() > 0) {
+                    buffer.setLength(buffer.length() - 1);
+                    System.out.print("\b \b");
+                    System.out.flush();
+                }
+                continue;
+            }
+
+            buffer.append((char) ch);
+            System.out.print((char) ch);
+            System.out.flush();
         }
+    }
+
+    private static String completeBuiltin(String partial) {
+        if (partial.length() > 0 && "echo".startsWith(partial) && !partial.equals("echo")) {
+            return "echo ";
+        }
+        if (partial.length() > 0 && "exit".startsWith(partial) && !partial.equals("exit")) {
+            return "exit ";
+        }
+        return null;
     }
 
     private static List<String> parseCommand(String input) {
