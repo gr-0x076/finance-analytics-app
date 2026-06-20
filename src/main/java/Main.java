@@ -7,6 +7,7 @@ public class Main {
 
     private static final TerminalMode terminalMode = new TerminalMode();
     private static File currentDirectory = new File(System.getProperty("user.dir"));
+    private static final java.util.Map<String, String> completions = new java.util.HashMap<>();
 
     public static void main(String[] args) throws Exception {
 
@@ -130,9 +131,16 @@ public class Main {
                         System.out.println("cd: " + path + ": No such file or directory");
                     }
                 } else if (command.equals("complete")) {
-                    if (tokens.size() >= 3 && tokens.get(1).equals("-p")) {
+                    if (tokens.size() >= 4 && tokens.get(1).equals("-C")) {
+                        completions.put(tokens.get(3), tokens.get(2));
+                    } else if (tokens.size() >= 3 && tokens.get(1).equals("-p")) {
                         String targetCmd = tokens.get(2);
-                        System.out.println("complete: " + targetCmd + ": no completion specification");
+                        String completer = completions.get(targetCmd);
+                        if (completer != null) {
+                            System.out.println("complete -C '" + completer + "' " + targetCmd);
+                        } else {
+                            System.out.println("complete: " + targetCmd + ": no completion specification");
+                        }
                     }
                     // other flags: no-op for now
                 } else if (command.equals("type")) {
