@@ -397,7 +397,10 @@ public class Main {
                             System.out.flush();
                             lastWasTab = false;
                         } else if (fileMatches.size() == 1) {
-                            String completion = base + dirPathStr + fileMatches.first() + " ";
+                            String matchedName = fileMatches.first();
+                            File matchedFile = new File(searchDir, matchedName);
+                            String suffix = matchedFile.isDirectory() ? "/" : " ";
+                            String completion = base + dirPathStr + matchedName + suffix;
                             while (buffer.length() > 0) {
                                 System.out.print("\b \b");
                                 buffer.setLength(buffer.length() - 1);
