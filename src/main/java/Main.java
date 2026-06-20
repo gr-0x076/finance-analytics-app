@@ -375,6 +375,24 @@ public class Main {
                         int lastSpaceIdx = text.lastIndexOf(' ');
                         String rawToken = text.substring(lastSpaceIdx + 1);
                         String base = text.substring(0, lastSpaceIdx + 1);
+                        String command = text.substring(0, text.indexOf(' '));
+                        String completer = completions.get(command);
+
+                        if (completer != null) {
+                            String candidate = runCompleter(completer);
+                            if (candidate != null) {
+                                String completion = base + candidate + " ";
+                                while (buffer.length() > 0) {
+                                    System.out.print("\b \b");
+                                    buffer.setLength(buffer.length() - 1);
+                                }
+                                buffer.append(completion);
+                                System.out.print(completion);
+                                System.out.flush();
+                            }
+                            lastWasTab = false;
+                            continue;
+                        }
 
                         String dirPathStr = "";
                         String prefix = rawToken;
@@ -478,6 +496,19 @@ public class Main {
             }
         } finally {
             terminalMode.disableRawMode();
+        }
+    }
+
+    private static String runCompleter(String completer) {
+        try {
+            Process process = new ProcessBuilder(completer).start();
+            java.io.BufferedReader reader = new java.io.BufferedReader(
+                    new java.io.InputStreamReader(process.getInputStream()));
+            String candidate = reader.readLine();
+            process.waitFor();
+            return candidate;
+        } catch (Exception ignored) {
+            return null;
         }
     }
 
