@@ -330,18 +330,30 @@ public class Main {
                             System.out.flush();
                             lastWasTab = false;
                         } else {
-                            if (lastWasTab) {
-                                terminalMode.disableRawMode();
-                                System.out.println();
-                                System.out.println(String.join("  ", matches));
-                                System.out.print("$ " + buffer.toString());
+                            String lcp = getLongestCommonPrefix(matches);
+                            if (lcp.length() > buffer.length()) {
+                                while (buffer.length() > 0) {
+                                    System.out.print("\b \b");
+                                    buffer.setLength(buffer.length() - 1);
+                                }
+                                buffer.append(lcp);
+                                System.out.print(lcp);
                                 System.out.flush();
-                                terminalMode.enableRawMode();
                                 lastWasTab = false;
                             } else {
-                                System.out.print("\u0007");
-                                System.out.flush();
-                                lastWasTab = true;
+                                if (lastWasTab) {
+                                    terminalMode.disableRawMode();
+                                    System.out.println();
+                                    System.out.println(String.join("  ", matches));
+                                    System.out.print("$ " + buffer.toString());
+                                    System.out.flush();
+                                    terminalMode.enableRawMode();
+                                    lastWasTab = false;
+                                } else {
+                                    System.out.print("\u0007");
+                                    System.out.flush();
+                                    lastWasTab = true;
+                                }
                             }
                         }
                     } else {
@@ -407,6 +419,26 @@ public class Main {
         }
 
         return matches;
+    }
+
+    private static String getLongestCommonPrefix(java.util.Collection<String> strings) {
+        if (strings.isEmpty()) {
+            return "";
+        }
+        String first = strings.iterator().next();
+        int minLen = first.length();
+        for (String s : strings) {
+            minLen = Math.min(minLen, s.length());
+        }
+        for (int i = 0; i < minLen; i++) {
+            char c = first.charAt(i);
+            for (String s : strings) {
+                if (s.charAt(i) != c) {
+                    return first.substring(0, i);
+                }
+            }
+        }
+        return first.substring(0, minLen);
     }
 
     private static List<String> parseCommand(String input) {
