@@ -386,9 +386,10 @@ public class Main {
                                 previousWord = previousTokens.get(previousTokens.size() - 1);
                             }
 
-                            String candidate = runCompleter(
+                            List<String> candidates = runCompleter(
                                     completer, command, rawToken, previousWord, text);
-                            if (candidate != null) {
+                            if (candidates.size() == 1) {
+                                String candidate = candidates.get(0);
                                 String completion = base + candidate + " ";
                                 while (buffer.length() > 0) {
                                     System.out.print("\b \b");
@@ -397,11 +398,25 @@ public class Main {
                                 buffer.append(completion);
                                 System.out.print(completion);
                                 System.out.flush();
+                                lastWasTab = false;
+                            } else if (candidates.isEmpty()) {
+                                System.out.print("\u0007");
+                                System.out.flush();
+                                lastWasTab = false;
+                            } else if (lastWasTab) {
+                                java.util.Collections.sort(candidates);
+                                terminalMode.disableRawMode();
+                                System.out.println();
+                                System.out.println(String.join("  ", candidates));
+                                System.out.print("$ " + buffer.toString());
+                                System.out.flush();
+                                terminalMode.enableRawMode();
+                                lastWasTab = false;
                             } else {
                                 System.out.print("\u0007");
                                 System.out.flush();
+                                lastWasTab = true;
                             }
-                            lastWasTab = false;
                             continue;
                         }
 
@@ -510,9 +525,10 @@ public class Main {
         }
     }
 
-    private static String runCompleter(
+    private static List<String> runCompleter(
             String completer, String command, String currentWord,
             String previousWord, String commandLine) {
+        List<String> candidates = new ArrayList<>();
         try {
             ProcessBuilder processBuilder = new ProcessBuilder(
                     completer, command, currentWord, previousWord);
@@ -523,12 +539,14 @@ public class Main {
             Process process = processBuilder.start();
             java.io.BufferedReader reader = new java.io.BufferedReader(
                     new java.io.InputStreamReader(process.getInputStream()));
-            String candidate = reader.readLine();
+            String candidate;
+            while ((candidate = reader.readLine()) != null) {
+                candidates.add(candidate);
+            }
             process.waitFor();
-            return candidate;
         } catch (Exception ignored) {
-            return null;
         }
+        return candidates;
     }
 
     private static java.util.TreeSet<String> getMatchingCommands(String partial) {
