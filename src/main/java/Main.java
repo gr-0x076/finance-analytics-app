@@ -5,11 +5,11 @@ import java.util.List;
 
 public class Main {
 
+    private static final TerminalMode terminalMode = new TerminalMode();
+
     public static void main(String[] args) throws Exception {
 
         File currentDirectory = new File(System.getProperty("user.dir"));
-        TerminalMode terminalMode = new TerminalMode();
-        terminalMode.enableRawMode();
 
         try {
             while (true) {
@@ -231,10 +231,10 @@ public class Main {
                             pb.redirectError(ProcessBuilder.Redirect.INHERIT);
                         }
 
-                        terminalMode.disableRawMode();
+                        System.out.flush();
+                        System.err.flush();
                         Process process = pb.start();
                         process.waitFor();
-                        terminalMode.enableRawMode();
 
                     } else {
                         System.out.println(command + ": command not found");
@@ -282,58 +282,66 @@ public class Main {
     }
 
     private static String readLineWithTabCompletion() throws java.io.IOException {
-        StringBuilder buffer = new StringBuilder();
-        System.out.print("$ ");
-        System.out.flush();
+        terminalMode.enableRawMode();
+        try {
+            StringBuilder buffer = new StringBuilder();
+            System.out.print("$ ");
+            System.out.flush();
 
-        while (true) {
-            int ch = System.in.read();
-            if (ch == -1) {
-                return null;
-            }
-
-            if (ch == '\r') {
-                int next = System.in.read();
-                if (next != '\n' && next != -1) {
-                    // ignore extra character if present
+            while (true) {
+                int ch = System.in.read();
+                if (ch == -1) {
+                    terminalMode.disableRawMode();
+                    return null;
                 }
-                System.out.println();
-                return buffer.toString();
-            }
 
-            if (ch == '\n') {
-                System.out.println();
-                return buffer.toString();
-            }
+                if (ch == '\r') {
+                    int next = System.in.read();
+                    if (next != '\n' && next != -1) {
+                        // ignore extra character if present
+                    }
+                    terminalMode.disableRawMode();
+                    System.out.println();
+                    return buffer.toString();
+                }
 
-            if (ch == '\t') {
-                if (!buffer.toString().contains(" ")) {
-                    String completion = completeBuiltin(buffer.toString());
-                    if (completion != null) {
-                        while (buffer.length() > 0) {
-                            System.out.print("\b \b");
-                            buffer.setLength(buffer.length() - 1);
+                if (ch == '\n') {
+                    terminalMode.disableRawMode();
+                    System.out.println();
+                    return buffer.toString();
+                }
+
+                if (ch == '\t') {
+                    if (!buffer.toString().contains(" ")) {
+                        String completion = completeBuiltin(buffer.toString());
+                        if (completion != null) {
+                            while (buffer.length() > 0) {
+                                System.out.print("\b \b");
+                                buffer.setLength(buffer.length() - 1);
+                            }
+                            buffer.append(completion);
+                            System.out.print(completion);
+                            System.out.flush();
                         }
-                        buffer.append(completion);
-                        System.out.print(completion);
+                    }
+                    continue;
+                }
+
+                if (ch == 8 || ch == 127) {
+                    if (buffer.length() > 0) {
+                        buffer.setLength(buffer.length() - 1);
+                        System.out.print("\b \b");
                         System.out.flush();
                     }
+                    continue;
                 }
-                continue;
-            }
 
-            if (ch == 8 || ch == 127) {
-                if (buffer.length() > 0) {
-                    buffer.setLength(buffer.length() - 1);
-                    System.out.print("\b \b");
-                    System.out.flush();
-                }
-                continue;
+                buffer.append((char) ch);
+                System.out.print((char) ch);
+                System.out.flush();
             }
-
-            buffer.append((char) ch);
-            System.out.print((char) ch);
-            System.out.flush();
+        } finally {
+            terminalMode.disableRawMode();
         }
     }
 
