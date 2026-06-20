@@ -231,8 +231,10 @@ public class Main {
                             pb.redirectError(ProcessBuilder.Redirect.INHERIT);
                         }
 
+                        terminalMode.disableRawMode();
                         Process process = pb.start();
                         process.waitFor();
+                        terminalMode.enableRawMode();
 
                     } else {
                         System.out.println(command + ": command not found");
