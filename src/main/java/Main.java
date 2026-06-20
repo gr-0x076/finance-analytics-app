@@ -224,6 +224,7 @@ public class Main {
                         ProcessBuilder pb = new ProcessBuilder(processArgs);
 
                         pb.directory(currentDirectory);
+                        pb.redirectInput(ProcessBuilder.Redirect.INHERIT);
 
                         if (stdoutRedirectFile != null) {
 
