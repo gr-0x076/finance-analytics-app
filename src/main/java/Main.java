@@ -404,7 +404,19 @@ public class Main {
                                 System.out.print("\u0007");
                                 System.out.flush();
                                 lastWasTab = false;
-                            } else if (lastWasTab) {
+                            } else {
+                                String lcp = getLongestCommonPrefix(candidates);
+                                if (lcp.length() > rawToken.length()) {
+                                    String completion = base + lcp;
+                                    while (buffer.length() > 0) {
+                                        System.out.print("\b \b");
+                                        buffer.setLength(buffer.length() - 1);
+                                    }
+                                    buffer.append(completion);
+                                    System.out.print(completion);
+                                    System.out.flush();
+                                    lastWasTab = false;
+                                } else if (lastWasTab) {
                                 java.util.Collections.sort(candidates);
                                 terminalMode.disableRawMode();
                                 System.out.println();
@@ -413,10 +425,11 @@ public class Main {
                                 System.out.flush();
                                 terminalMode.enableRawMode();
                                 lastWasTab = false;
-                            } else {
-                                System.out.print("\u0007");
-                                System.out.flush();
-                                lastWasTab = true;
+                                } else {
+                                    System.out.print("\u0007");
+                                    System.out.flush();
+                                    lastWasTab = true;
+                                }
                             }
                             continue;
                         }
