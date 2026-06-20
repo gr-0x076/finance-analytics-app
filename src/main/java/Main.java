@@ -6,10 +6,9 @@ import java.util.List;
 public class Main {
 
     private static final TerminalMode terminalMode = new TerminalMode();
+    private static File currentDirectory = new File(System.getProperty("user.dir"));
 
     public static void main(String[] args) throws Exception {
-
-        File currentDirectory = new File(System.getProperty("user.dir"));
 
         try {
             while (true) {
@@ -313,8 +312,9 @@ public class Main {
                 }
 
                 if (ch == '\t') {
-                    if (!buffer.toString().contains(" ")) {
-                        java.util.TreeSet<String> matches = getMatchingCommands(buffer.toString());
+                    String text = buffer.toString();
+                    if (!text.contains(" ")) {
+                        java.util.TreeSet<String> matches = getMatchingCommands(text);
                         if (matches.isEmpty()) {
                             System.out.print("\u0007");
                             System.out.flush();
@@ -357,9 +357,63 @@ public class Main {
                             }
                         }
                     } else {
-                        System.out.print("\u0007");
-                        System.out.flush();
-                        lastWasTab = false;
+                        int lastSpaceIdx = text.lastIndexOf(' ');
+                        String prefix = text.substring(lastSpaceIdx + 1);
+                        String base = text.substring(0, lastSpaceIdx + 1);
+
+                        java.util.TreeSet<String> fileMatches = new java.util.TreeSet<>();
+                        File[] files = currentDirectory.listFiles();
+                        if (files != null) {
+                            for (File file : files) {
+                                String name = file.getName();
+                                if (name.startsWith(prefix)) {
+                                    fileMatches.add(name);
+                                }
+                            }
+                        }
+
+                        if (fileMatches.isEmpty()) {
+                            System.out.print("\u0007");
+                            System.out.flush();
+                            lastWasTab = false;
+                        } else if (fileMatches.size() == 1) {
+                            String completion = base + fileMatches.first() + " ";
+                            while (buffer.length() > 0) {
+                                System.out.print("\b \b");
+                                buffer.setLength(buffer.length() - 1);
+                            }
+                            buffer.append(completion);
+                            System.out.print(completion);
+                            System.out.flush();
+                            lastWasTab = false;
+                        } else {
+                            String lcp = getLongestCommonPrefix(fileMatches);
+                            if (lcp.length() > prefix.length()) {
+                                String completion = base + lcp;
+                                while (buffer.length() > 0) {
+                                    System.out.print("\b \b");
+                                    buffer.setLength(buffer.length() - 1);
+                                }
+                                buffer.append(completion);
+                                System.out.print(completion);
+                                System.out.flush();
+                                lastWasTab = false;
+                            } else {
+                                if (lastWasTab) {
+                                    terminalMode.disableRawMode();
+                                    System.out.println();
+                                    System.out.println(String.join("  ", fileMatches));
+                                    System.out.print("$ " + buffer.toString());
+                                    System.out.flush();
+                                    terminalMode.enableRawMode();
+                                    lastWasTab = false;
+                                } else {
+                                    System.out.print("\u0007");
+                                    System.out.flush();
+                                    lastWasTab = true;
+                                }
+                            }
+                        }
                     }
                     continue;
                 }
