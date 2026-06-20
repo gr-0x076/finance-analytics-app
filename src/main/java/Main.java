@@ -170,12 +170,20 @@ public class Main {
                     }
                     // other flags: no-op for now
                 } else if (command.equals("jobs")) {
+                    List<BackgroundJob> runningJobs = new ArrayList<>();
                     for (BackgroundJob job : backgroundJobs) {
                         if (job.process.isAlive()) {
-                            System.out.printf(
-                                    "[%d]+  %-24s%s%n",
-                                    job.jobNumber, "Running", job.command);
+                            runningJobs.add(job);
                         }
+                    }
+                    for (int i = 0; i < runningJobs.size(); i++) {
+                        BackgroundJob job = runningJobs.get(i);
+                        char marker = i == runningJobs.size() - 1
+                                ? '+'
+                                : i == runningJobs.size() - 2 ? '-' : ' ';
+                            System.out.printf(
+                                    "[%d]%c  %-24s%s%n",
+                                    job.jobNumber, marker, "Running", job.command);
                     }
                 } else if (command.equals("type")) {
 
