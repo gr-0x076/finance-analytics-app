@@ -287,6 +287,7 @@ public class Main {
             StringBuilder buffer = new StringBuilder();
             System.out.print("$ ");
             System.out.flush();
+            boolean lastWasTab = false;
 
             while (true) {
                 int ch = System.in.read();
@@ -312,26 +313,47 @@ public class Main {
                 }
 
                 if (ch == '\t') {
-                    String completion = null;
                     if (!buffer.toString().contains(" ")) {
-                        completion = completeCommand(buffer.toString());
-                    }
-                    if (completion != null) {
-                        while (buffer.length() > 0) {
-                            System.out.print("\b \b");
-                            buffer.setLength(buffer.length() - 1);
+                        java.util.TreeSet<String> matches = getMatchingCommands(buffer.toString());
+                        if (matches.isEmpty()) {
+                            System.out.print("\u0007");
+                            System.out.flush();
+                            lastWasTab = false;
+                        } else if (matches.size() == 1) {
+                            String completion = matches.first() + " ";
+                            while (buffer.length() > 0) {
+                                System.out.print("\b \b");
+                                buffer.setLength(buffer.length() - 1);
+                            }
+                            buffer.append(completion);
+                            System.out.print(completion);
+                            System.out.flush();
+                            lastWasTab = false;
+                        } else {
+                            if (lastWasTab) {
+                                terminalMode.disableRawMode();
+                                System.out.println();
+                                System.out.println(String.join("  ", matches));
+                                System.out.print("$ " + buffer.toString());
+                                System.out.flush();
+                                terminalMode.enableRawMode();
+                                lastWasTab = false;
+                            } else {
+                                System.out.print("\u0007");
+                                System.out.flush();
+                                lastWasTab = true;
+                            }
                         }
-                        buffer.append(completion);
-                        System.out.print(completion);
-                        System.out.flush();
                     } else {
                         System.out.print("\u0007");
                         System.out.flush();
+                        lastWasTab = false;
                     }
                     continue;
                 }
 
                 if (ch == 8 || ch == 127) {
+                    lastWasTab = false;
                     if (buffer.length() > 0) {
                         buffer.setLength(buffer.length() - 1);
                         System.out.print("\b \b");
@@ -340,6 +362,7 @@ public class Main {
                     continue;
                 }
 
+                lastWasTab = false;
                 buffer.append((char) ch);
                 System.out.print((char) ch);
                 System.out.flush();
@@ -349,12 +372,12 @@ public class Main {
         }
     }
 
-    private static String completeCommand(String partial) {
+    private static java.util.TreeSet<String> getMatchingCommands(String partial) {
+        java.util.TreeSet<String> matches = new java.util.TreeSet<>();
         if (partial.isEmpty()) {
-            return null;
+            return matches;
         }
         List<String> builtins = List.of("echo", "exit", "type", "pwd", "cd");
-        java.util.TreeSet<String> matches = new java.util.TreeSet<>();
 
         for (String b : builtins) {
             if (b.startsWith(partial)) {
@@ -383,11 +406,7 @@ public class Main {
             }
         }
 
-        if (matches.size() == 1) {
-            return matches.first() + " ";
-        }
-
-        return null;
+        return matches;
     }
 
     private static List<String> parseCommand(String input) {
