@@ -30,6 +30,7 @@ public class Main {
         try {
             while (true) {
 
+                reapCompletedJobs();
                 String input = readLineWithTabCompletion();
                 if (input == null) {
                     break;
@@ -313,6 +314,24 @@ public class Main {
         } finally {
             terminalMode.disableRawMode();
         }
+    }
+
+    private static void reapCompletedJobs() {
+        List<BackgroundJob> completedJobs = new ArrayList<>();
+        for (int i = 0; i < backgroundJobs.size(); i++) {
+            BackgroundJob job = backgroundJobs.get(i);
+            if (!job.process.isAlive()) {
+                char marker = i == backgroundJobs.size() - 1
+                        ? '+'
+                        : i == backgroundJobs.size() - 2 ? '-' : ' ';
+                String commandText = job.command.replaceFirst("\\s*&\\s*$", "");
+                System.out.printf(
+                        "[%d]%c  %-24s%s%n",
+                        job.jobNumber, marker, "Done", commandText);
+                completedJobs.add(job);
+            }
+        }
+        backgroundJobs.removeAll(completedJobs);
     }
 
     private static class TerminalMode {
