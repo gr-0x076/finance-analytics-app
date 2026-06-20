@@ -389,6 +389,9 @@ public class Main {
                                 buffer.append(completion);
                                 System.out.print(completion);
                                 System.out.flush();
+                            } else {
+                                System.out.print("\u0007");
+                                System.out.flush();
                             }
                             lastWasTab = false;
                             continue;
