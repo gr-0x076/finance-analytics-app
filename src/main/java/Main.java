@@ -346,11 +346,18 @@ public class Main {
     }
 
     private static String completeBuiltin(String partial) {
-        if (partial.length() > 0 && "echo".startsWith(partial) && !partial.equals("echo")) {
-            return "echo ";
+        if (partial.isEmpty()) {
+            return null;
         }
-        if (partial.length() > 0 && "exit".startsWith(partial) && !partial.equals("exit")) {
-            return "exit ";
+        List<String> builtins = List.of("echo", "exit", "type", "pwd", "cd");
+        List<String> matches = new ArrayList<>();
+        for (String b : builtins) {
+            if (b.startsWith(partial)) {
+                matches.add(b);
+            }
+        }
+        if (matches.size() == 1) {
+            return matches.get(0) + " ";
         }
         return null;
     }
